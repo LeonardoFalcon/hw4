@@ -30,23 +30,23 @@ while True:
     accel_data = sensor.get_accel_data()
     gyro_data = sensor.get_gyro_data()
 
-    print("Accelerometer data")
-    print("x: " + str(accel_data['x']))
-    print("y: " + str(accel_data['y']))
-    print("z: " + str(accel_data['z']))
+#    print("Accelerometer data")
+#    print("x: " + str(accel_data['x']))
+#    print("y: " + str(accel_data['y']))
+#    print("z: " + str(accel_data['z']))
 
     client.publish(accelerometerXTopic, payload=accel_data['x'], qos=2, retain=False)
-    client.publish(accelerometerYTopic, payload=accel_data['y'], qos=2, retain=False)
-    client.publish(accelerometerZTopic, payload=accel_data['z'], qos=2, retain=False)
+#   client.publish(accelerometerYTopic, payload=accel_data['y'], qos=2, retain=False)
+#   client.publish(accelerometerZTopic, payload=accel_data['z'], qos=2, retain=False)
 
-    print("Gyroscope data")
-    print("x: " + str(gyro_data['x']))
-    print("y: " + str(gyro_data['y']))
-    print("z: " + str(gyro_data['z']))
+#   print("Gyroscope data")
+#   print("x: " + str(gyro_data['x']))
+#   print("y: " + str(gyro_data['y']))
+#   print("z: " + str(gyro_data['z']))
 
-    client.publish(gyroscopeXTopic, payload=gyro_data['x'], qos=2, retain=False)
-    client.publish(gyroscopeYTopic, payload=gyro_data['y'], qos=2, retain=False)
-    client.publish(gyroscopeZTopic, payload=gyro_data['z'], qos=2, retain=False)
+#    client.publish(gyroscopeXTopic, payload=gyro_data['x'], qos=2, retain=False)
+#    client.publish(gyroscopeYTopic, payload=gyro_data['y'], qos=2, retain=False)
+#    client.publish(gyroscopeZTopic, payload=gyro_data['z'], qos=2, retain=False)
 
-    sleep(0.1)
+    sleep(0.01)
 
