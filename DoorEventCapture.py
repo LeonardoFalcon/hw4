@@ -1,10 +1,19 @@
 import paho.mqtt.client as mqtt
 import time, threading
 from collections import deque
+import numpy as np
 
 brokerIp = "192.168.86.77" #LAN
 accelerometerXTopic = "accelerometerX"
-bufferSize = 100
+
+#design parameters
+bufferSize = 100 #samples taken for average
+standarDeviationsToStart = 3 #number of standard deviations that indicate door event is starting
+numberOfChunks = 5 #number of chunks we want data to be broken up into
+numberOfSamplesAboveThresholdToStart = 10
+numberOfSamplesBelowThresholdToStop = 10
+# end of design parameters
+
 meanCapturedFlag = 0
 capturingDataFlag = 0
 eventActive = 0
@@ -14,6 +23,12 @@ doorEventData = deque()
 counter = 0
 startDataCaptureCount = 0
 stopDataCaptureCount = 0
+
+def chunks(lst, div):
+    lst = [ lst[i:i + len(lst)/div] for i in range(0, len(lst), len(lst)/div) ] #Subdivide list.
+    if len(lst) > div: # If it is an uneven list.
+        lst[div-1].extend(sum(lst[div:],[])) # Take the last part of the list and append it to the last equal division.
+    return lst[:div] #Return the list up to that point.
 
 def on_connect(client, userdata, flags, rc):
    print("Connected with result code "+str(rc))
@@ -31,8 +46,8 @@ def on_message(client, userdata, msg):
         if meanCapturedFlag == 1:
             if(abs(float(msg.payload)) > threshold): #value significantly far from mean
                 startDataCaptureCount += 1 #this is to debounce
-        if startDataCaptureCount >= 10: #door opening/closing | this number can be adjusted for sensitivity
-            if startDataCaptureCount == 10:
+        if startDataCaptureCount >= numberOfSamplesAboveThresholdToStart: #door opening/closing | this number can be adjusted for sensitivity
+            if startDataCaptureCount == numberOfSamplesAboveThresholdToStart:
                 print("start")
                 eventActive = 1
                 stopDataCaptureCount = 0 #reset stop data counter
@@ -40,18 +55,15 @@ def on_message(client, userdata, msg):
         if meanCapturedFlag == 1:
             if(abs(float(msg.payload)) < threshold): #data close to mean
                 stopDataCaptureCount += 1
-                if(stopDataCaptureCount >= 10): #door has stopped moving
+                if(stopDataCaptureCount >= numberOfSamplesBelowThresholdToStop): #door has stopped moving
                    if eventActive == 1:
                        print("stop")
-                       print(doorEventData)
-                       doorEventData.clear()
+                       dataInChunks = list(chunks(list(doorEventData), numberOfChunks)) #this will be the data chunks
+                       doorEventData.clear() #clear for next event
+                       print(dataInChunks)
                    startDataCaptureCount = 0
                    stopDataCaptureCount = 0
                    eventActive = 0
-
-def chunks(l, n):
-    for i in xrange(0, len(l), n):
-        yield l[i:i + n]
 
 def mean(data):
     """Return the sample arithmetic mean of data."""
@@ -91,7 +103,7 @@ while True:
         if meanCapturedFlag == 0:
             meanOfData = mean(data)
             stddevOfData = stddev(data)
-            threshold = meanOfData + (stddevOfData * 3)
+            threshold = meanOfData + (stddevOfData * standarDeviationsToStart)
             meanCapturedFlag = 1
             print("mean captured")
             print(meanOfData)
