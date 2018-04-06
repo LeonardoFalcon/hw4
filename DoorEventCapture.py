@@ -82,7 +82,7 @@ def on_message(client, userdata, msg):
                        with open(csvfile, "w") as output:
                            print("writing to file")
                            writer = csv.writer(output, lineterminator='\n')
-                           for val in list(doorEventData):
+                           for val in list(testData): # can be used for training data
                                writer.writerow([val])
                    doorEventData.clear()
                    startDataCaptureCount = 0
