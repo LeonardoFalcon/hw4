@@ -3,6 +3,7 @@ import time
 import datetime
 from time import strftime, sleep
 import paho.mqtt.client as mqtt
+from threading import Timer
 
 brokerIp = "192.168.86.77" #LAN
 sleepTopic = "sleepFeature"
@@ -15,6 +16,7 @@ onBedThreshold = 700
 onTheBedFlag = False
 maxSleep = 720 #in minutes - 12 hours
 minSleep = 240 #in minutes - 4 hours
+accumulatedSleep = 0 #in minutes
 
 def feed(val):
    global filterReady
@@ -35,14 +37,29 @@ def feed(val):
       sum += val
 
 def stopWatch(value):
+    global accumulatedSleep
     '''From seconds to Days;Hours:Minutes;Seconds'''
-    print(value)
+    seconds = int(value)
+    accumulatedSleep += int(seconds/60)
 
 def on_connect(client, userdata, flags, rc):
    print("Connected with result code "+str(rc))
 
 def on_message(client, userdata, msg):
    print("msg received")
+
+def getSecondsInADay():
+    x=datetime.today()
+    y=x.replace(day=x.day+1, hour=1, minute=0, second=0, microsecond=0)
+    delta_t=y-x
+
+    return secs=delta_t.seconds+1
+
+def publishSleepInADay():
+    normalizedSleep = (accumulatedSleep - minSleep) / (sleepMax - sleepMin)
+    client.publish(currentlySleepingTopic, payload=normalizedSleep, qos=2, retain=False)
+    t = Timer(getSecondsInADay(), publishSleepInADay)
+    t.start()
 
 ser=serial.Serial("/dev/ttyACM0",9600)  #setup communication to Arduino
 ser.baudrate=9600
@@ -55,6 +72,9 @@ client.on_message = on_message
 client.connect(brokerIp, 1883, 60)
 
 client.loop_start()
+
+t = Timer(getSecondsInADay(), publishSleepInADay)
+t.start()
 
 with open("cpu_temp.csv", "a") as log:
    while True:
