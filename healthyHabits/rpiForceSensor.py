@@ -27,6 +27,7 @@ def feed(val):
       sum += val
       sampleCount += 1
       if sampleCount == windowSize:
+         avg = sum/windowSize
          filterReady = True
    else:
       avg = sum/windowSize
@@ -69,7 +70,7 @@ with open("cpu_temp.csv", "a") as log:
 
       if filterReady == True:
          log.write("{0},{1}\n".format(strftime("%Y-%m-%d %H:%M:%S"),str(avg)))
-         sleep(1)
+         sleep(0.5)
          if avg > onBedThreshold:
             if onTheBedFlag == False:
                onTheBedFlag = True
