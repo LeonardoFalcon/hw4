@@ -1,13 +1,11 @@
 import serial
 import time
+import os,json
+import ibmiotf.application
 from datetime import datetime
 from time import strftime, sleep
-import paho.mqtt.client as mqtt
 from threading import Timer
 
-brokerIp = "192.168.86.77" #LAN
-sleepTopic = "sleepFeature"
-currentlySleepingTopic = "sleepActive"
 filterReady = False
 avg = 0
 sum = 0
@@ -57,23 +55,32 @@ def getSecondsInADay():
     return delta_t.seconds+1
 
 def publishSleepInADay():
-    normalizedSleep = (accumulatedSleep - minSleep) / (maxSleep - minSleep)
+    global accumulatedSleep
+
+    normalizedSleep = (float(accumulatedSleep - minSleep)) / (maxSleep - minSleep)
     print(normalizedSleep)
-    client.publish(sleepTopic, payload=normalizedSleep, qos=2, retain=False)
+    mydata = {'sleepFeature':normalizedSleep}
+    client.publishEvent("RaspberryPi","b827eba7caaf","sleepFeature","json",mydata)
     t = Timer(getSecondsInADay(), publishSleepInADay)
     t.start()
+    accumulatedSleep = 0
 
 ser=serial.Serial("/dev/ttyACM0",9600)  #setup communication to Arduino
 ser.baudrate=9600
 force = 0
 
-client = mqtt.Client(client_id="5", clean_session=False)
-client.on_connect = on_connect
-client.on_message = on_message
-
-client.connect(brokerIp, 1883, 60)
-
-client.loop_start()
+client=None
+try:
+    options = {"org":"vwcasz",
+    "type":"standalone",
+    "id":"22222", # this value needs to be changed and has to be unique
+    "auth-method":"use-token-auth",
+    "auth-token":"f4Q-03@Ti9*gysZdqa",
+    "auth-key":"a-vwcasz-7ag752fyzc"}
+    client=ibmiotf.application.Client(options)
+    client.connect()
+except ibmiotf.ConnectionException as e:
+    print e
 
 t = Timer(getSecondsInADay(), publishSleepInADay)
 t.start()
@@ -96,13 +103,15 @@ with open("cpu_temp.csv", "a") as log:
          if avg > onBedThreshold:
             if onTheBedFlag == False:
                onTheBedFlag = True
-               client.publish(currentlySleepingTopic, payload=1, qos=2, retain=False)
+               mydata = {'sleepActive':1}
+               client.publishEvent("RaspberryPi","b827eba7caaf","sleepActive","json",mydata)
                start = time.time()
                print("on the bed")
          else:
             if onTheBedFlag == True:
                onTheBedFlag = False
-               client.publish(currentlySleepingTopic, payload=0, qos=2, retain=False)
+               mydata = {'sleepActive':2}
+               client.publishEvent("RaspberryPi","b827eba7caaf","sleepActive","json",mydata)
                end = time.time()
                stopWatch(end-start)
                print("off the bed")
