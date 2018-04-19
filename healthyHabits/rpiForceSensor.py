@@ -49,7 +49,7 @@ def on_message(client, userdata, msg):
 
 def getSecondsInADay():
     x=datetime.today()
-    y=x.replace(day=x.day, hour=x.hour+8, minute=x.minute, second=0, microsecond=0)
+    y=x.replace(day=x.day+1, hour=8, minute=0, second=0, microsecond=0)
     delta_t=y-x
 
     return delta_t.seconds+1
@@ -73,7 +73,7 @@ client=None
 try:
     options = {"org":"vwcasz",
     "type":"standalone",
-    "id":"22222", # this value needs to be changed and has to be unique
+    "id":"54321", # this value needs to be changed and has to be unique
     "auth-method":"use-token-auth",
     "auth-token":"f4Q-03@Ti9*gysZdqa",
     "auth-key":"a-vwcasz-7ag752fyzc"}
