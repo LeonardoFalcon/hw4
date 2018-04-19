@@ -1,6 +1,6 @@
 import serial
 import time
-import datetime
+from datetime import datetime
 from time import strftime, sleep
 import paho.mqtt.client as mqtt
 from threading import Timer
@@ -41,6 +41,7 @@ def stopWatch(value):
     '''From seconds to Days;Hours:Minutes;Seconds'''
     seconds = int(value)
     accumulatedSleep += int(seconds/60)
+    print(accumulatedSleep)
 
 def on_connect(client, userdata, flags, rc):
    print("Connected with result code "+str(rc))
@@ -50,14 +51,15 @@ def on_message(client, userdata, msg):
 
 def getSecondsInADay():
     x=datetime.today()
-    y=x.replace(day=x.day+1, hour=1, minute=0, second=0, microsecond=0)
+    y=x.replace(day=x.day, hour=x.hour+8, minute=x.minute, second=0, microsecond=0)
     delta_t=y-x
 
-    return secs=delta_t.seconds+1
+    return delta_t.seconds+1
 
 def publishSleepInADay():
-    normalizedSleep = (accumulatedSleep - minSleep) / (sleepMax - sleepMin)
-    client.publish(currentlySleepingTopic, payload=normalizedSleep, qos=2, retain=False)
+    normalizedSleep = (accumulatedSleep - minSleep) / (maxSleep - minSleep)
+    print(normalizedSleep)
+    client.publish(sleepTopic, payload=normalizedSleep, qos=2, retain=False)
     t = Timer(getSecondsInADay(), publishSleepInADay)
     t.start()
 
