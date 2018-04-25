@@ -110,7 +110,7 @@ with open("cpu_temp.csv", "a") as log:
          else:
             if onTheBedFlag == True:
                onTheBedFlag = False
-               mydata = {'sleepActive':2}
+               mydata = {'sleepActive':0}
                client.publishEvent("RaspberryPi","b827eba7caaf","sleepActive","json",mydata)
                end = time.time()
                stopWatch(end-start)
