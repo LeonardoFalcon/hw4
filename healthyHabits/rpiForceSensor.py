@@ -10,11 +10,11 @@ filterReady = False
 avg = 0
 sum = 0
 sampleCount = 0
-onBedThreshold = 700
+onBedThreshold = 700 //ADC counts higher than this means, there's someone on the bed.
 onTheBedFlag = False
 maxSleep = 720 #in minutes - 12 hours
 minSleep = 240 #in minutes - 4 hours
-accumulatedSleep = 0 #in minutes
+accumulatedSleep = 0 #in minutes - This is the accumulated time asleep.
 
 def feed(val):
    global filterReady
@@ -39,7 +39,7 @@ def stopWatch(value):
     '''From seconds to Days;Hours:Minutes;Seconds'''
     seconds = int(value)
     accumulatedSleep += int(seconds/60)
-    print(accumulatedSleep)
+    print(accumulatedSleep) //prints accumulated sleep every time you get off the bed
 
 def on_connect(client, userdata, flags, rc):
    print("Connected with result code "+str(rc))
@@ -63,7 +63,7 @@ def publishSleepInADay():
     client.publishEvent("RaspberryPi","b827eba7caaf","sleepFeature","json",mydata)
     t = Timer(getSecondsInADay(), publishSleepInADay)
     t.start()
-    accumulatedSleep = 0
+    accumulatedSleep = 0 //reset time slept at the end of the day.
 
 ser=serial.Serial("/dev/ttyACM0",9600)  #setup communication to Arduino
 ser.baudrate=9600
